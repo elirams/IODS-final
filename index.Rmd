@@ -1,6 +1,14 @@
+elisabet.ramsbeltran@helsinki.fi
+
 ---
-title: "IODS - final assignment"
+title: "IODS - Final assignment"
 author: "Elisabet Rams"
+date: "10th of December, 2017"
+params:
+  title
+  author
+  date
+
 output: 
  html_document:
     theme: sandstone
@@ -12,8 +20,25 @@ output:
     code_folding: hide
 ---
 
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+abstract:
 
+# 1. Introduction
+
+explain research question
+
+# 2. Data wrangling
+
+# 3. Description of the data and its variables
+
+# 4. Distributions and relationships between variables
+
+# 5. Methods
+
+# 6. Results
+
+# 7. Conclusions and discussion
