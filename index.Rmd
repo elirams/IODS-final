@@ -1,13 +1,9 @@
-elisabet.ramsbeltran@helsinki.fi
-
 ---
 title: "IODS - Final assignment"
 author: "Elisabet Rams"
-date: "10th of December, 2017"
+date: "December 11, 2017"
 params:
-  title
-  author
-  date
+  Email: "elisabet.ramsbeltran@helsinki.fi"
 
 output: 
  html_document:
