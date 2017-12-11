@@ -25,15 +25,89 @@ abstract:
 
 # 1. Introduction
 
-explain research question
+It is often said that education is the base and the origin for our society's performance. To support this saying, we should be able to find significant relationships between education and  one of the most fundamental aspect of our society, health. In this study we will use data from the United Nations Development Programme. We want to see if there is statistical relationship between education variables and health variables.  
+
+The hypothesis for this study are:
+
+* Life expectancy is positively related to mean years of schooling and expected years of schooling.
+* Maternal mortality rate and adolescent birth rate are negatively related to mean and expected years of schooling.
+
 
 # 2. Data wrangling
 
+The wrangling of the data used for this study can be found [here](https://github.com/elirams/IODS-final/blob/master/create_human_final.R)
+
+
 # 3. Description of the data and its variables
+
+The data is from the United Nations Development Programme. The data is related to various variables originally used to calculate the human development index and the gender inequality index. But we have unified the two datasets and selected the variables that are relavant for this study. For this study we selected the variables related to health and knowledge. We also selected the Gross National Income (GNI) per capita as a variable which might reduce noise in our models, since it is probably good indicator for the different clusters. For more information about the data you can visit the (UNDP technical notes)[http://hdr.undp.org/sites/default/files/hdr2015_technical_notes.pdf].
+
+A part from unifying two different datasets and selecting the desired variables, we created one new variable called "edu2.mean" mean population with at least secondary school, which is the mean of male and female population with at least secondary school.
+
+We also format the GNI variable so that R would be able to read it (removing the commas which indicate the thousands). We removed the rows with missing values. Finally we removed the observations which belonged to regions instead of countries. 
+
+First let's look at the structure of our data. We have 156 observations from 8 variables. 
+
+```{r str humanfinal}
+human <- read.table(file="C:/Users/Elisabet/Desktop/ELI/MASTER'S DEGREE/Open Data Science/GitHub/IODS-final/human.csv", header = TRUE, row.names = 1)
+str(human)
+```
+
+We can see the variables in the next table.
+
+```{r variables}
+
+Label<-c("yr.eduexp", "meanyr.edu", "edu2F", "edu2.mean", "lifexp", "matermor", "adobirth", "GNI")
+
+Variable<-c("Expected years of schooling", "Mean years of schooling", "Female population with at least secondary education, in %", "Population with at least secondary school, in %", "Life expectancy at birth, in years", "Maternal mortality ratio(deaths per 100 000 births)", "Adolescent birth rate (births per 1 000 women ages 15-19)", "Gross national income (GNI) per capita, in USD")
+
+variables <- data.frame(Label,Variable)
+
+print.data.frame(variables)
+```
 
 # 4. Distributions and relationships between variables
 
+First we can look at the summaries of the variables. For the 156 countries in the dataset, we have the following means, maximum and minimum values:
+
+As we could have guess, the mean years of expected education are higher (13.2 years) than the actual mean years of education (8.3 years). In average for all the countries, 55% of women and 58% of the total population have at least secondary school. Life expectancy is in average 71.7 years old. Maternal mortality is in average 148 deaths per 100 000 births and adolescent births are 47 births per 1 000 women aged 15-19 years old. Finally, GNI is 17 980 USD in average, but with wide differences, minimum of 581 USD and maximum of 123 124 USD.
+
+```{r summary human final}
+summary(human)
+```
+
+We can also see the distribution of the values for each variables in the diagonal of the next graphic. Maternal mortality and GNI are the most skewed variables towards the low end, which for the mortality is good, but for GNI, it shows the obvious, in the world there is very few rich people and millions of poor. Years of expected education follows almost a perfect normal distribution.
+
+In this plot it is also interesting to see the scattered plots for each combination of variables. Actually all combinations seem to have clear patterns and be pretty strongly correlated. For example, it is very clear that maternal mortality and adolescent births decreases with the GNI per capita.
+
+We can also observe the correlation between variables but we can comment on that with the next plot which is more visual.
+
+```{r gather human final}
+ggpairs(human, mapping=aes(), lower=list(combo=wrap("facethist", bins = 20)))
+```
+
+In the next plot we can see more visually the correlation between variables. Obviously the education variables are very strongly correlated between them. But it is interesting to see that in general, health and knowledge variables are very strongly related. Especially years of expected education is related positively with life expectancy (0.79) and negatively with maternal mortality (-0.74).
+
+```{r corrplot human final}
+cor(human)%>%corrplot.mixed(number.cex = .8, tl.col = "black")
+
+```
+Based on these correlation we can draw a plot to see how knowledge and health variables relate. In the first plot we can see how life expectancy increases with expected years of education. In the second plot we can see how maternal mortality decreases with mean years of education.
+
+```{r boxplot human}
+
+g1 <- ggplot(human, aes(x=yr.eduexp, y=lifexp))
+g1 + geom_point() + xlab("Years of expected education") + ylab("Life expectancy")
+
+g2 <- ggplot(human, aes(x=meanyr.edu, y=matermor))
+g2 + geom_point() + xlab("Mean years of education") + ylab("Maternal mortality")
+par(c(g1, g2), mfrow=c(1,2))
+```
+
+
 # 5. Methods
+
+On the previous sections we have seen an overview of the data, the possible relationships between variables and even some detailed graphics as examples. But now we will analyse our data with statistical methods, so we can really have proof to accept or reject our initial hypothesis.
 
 # 6. Results
 
