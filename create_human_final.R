@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Name: Elisabet Rams 
 # Date: 11/12/2017
 # Email: elisabet.ramsbeltran@helsinki.fi
