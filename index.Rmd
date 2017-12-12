@@ -1,6 +1,8 @@
 ---
 title: "IODS - Final assignment"
-author: "Elisabet Rams"
+author: 
+  - name: "Elisabet Rams"
+    affiliation: "elisabet.ramsbeltran@helsinki.fi"
 date: "December 11, 2017"
 params:
   Email: "elisabet.ramsbeltran@helsinki.fi"
@@ -21,26 +23,36 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-abstract:
 
-# 1. Introduction
+<br>
 
-It is often said that education is the base and the origin for our society's performance. To support this saying, we should be able to find significant relationships between education and  one of the most fundamental aspect of our society, health. In this study we will use data from the United Nations Development Programme. We want to see if there is statistical relationship between education variables and health variables.  
+>**In this study we analyse a data set which contains obervations for each country about health and knowledge variables. We use linear regression models and k-means clustering method. The study proves statistically that there is relationships between health variables, such as life expectancy, adolescent births and maternal mortality; and knowledge variables, such as mean years of education, years of expected education and population with at least secondary school.**
+
+
+<br>
+
+## 1. Introduction
+
+It is often said that education is the base and the origin for our society's performance. To support this saying, we should be able to find significant relationships between education and  one of the most fundamental aspect of our society, health. In this study we will use data from the United Nations Development Programme. The main purpose of this study is to prove if there is statistical relationship between education variables and health variables.  
 
 The hypothesis for this study are:
 
-* Life expectancy is positively related to mean years of schooling and expected years of schooling.
-* Maternal mortality rate and adolescent birth rate are negatively related to mean and expected years of schooling.
+* Life expectancy is positively related to mean years of schooling, expected years of schooling and population with at least secondary school.
+* Maternal mortality rate and adolescent birth rate are negatively related to mean, expected years of schooling and population with at least secondary school.
 
+Moreover we would like to know if our dataset is homogenously distributed or rather clustered.
 
-# 2. Data wrangling
+<br>
 
-The wrangling of the data used for this study can be found [here](https://github.com/elirams/IODS-final/blob/master/create_human_final.R)
+## 2. Data wrangling
 
+The wrangling of the data used for this study can be found [here.](https://github.com/elirams/IODS-final/blob/master/create_human_final.R)
 
-# 3. Description of the data and its variables
+<br>
 
-The data is from the United Nations Development Programme. The data is related to various variables originally used to calculate the human development index and the gender inequality index. But we have unified the two datasets and selected the variables that are relavant for this study. For this study we selected the variables related to health and knowledge. We also selected the Gross National Income (GNI) per capita as a variable which might reduce noise in our models, since it is probably good indicator for the different clusters. For more information about the data you can visit the (UNDP technical notes)[http://hdr.undp.org/sites/default/files/hdr2015_technical_notes.pdf].
+## 3. Description of the data and its variables
+
+The data is from the United Nations Development Programme. The data is related to various variables originally used to calculate the human development index and the gender inequality index. But we have unified the two datasets and selected the variables that are relavant for this study. For this study we selected the variables related to health and knowledge. We also selected the Gross National Income (GNI) per capita as a variable which might reduce noise in our models, since it is probably good indicator for the different clusters. For more information about the data you can visit the [UNDP technical notes.](http://hdr.undp.org/sites/default/files/hdr2015_technical_notes.pdf)
 
 A part from unifying two different datasets and selecting the desired variables, we created one new variable called "edu2.mean" mean population with at least secondary school, which is the mean of male and female population with at least secondary school.
 
@@ -63,10 +75,12 @@ Variable<-c("Expected years of schooling", "Mean years of schooling", "Female po
 
 variables <- data.frame(Label,Variable)
 
-print.data.frame(variables)
+print.data.frame(variables, quote=TRUE, right = FALSE)
 ```
 
-# 4. Distributions and relationships between variables
+<br>
+
+## 4. Distributions and relationships between variables
 
 First we can look at the summaries of the variables. For the 156 countries in the dataset, we have the following means, maximum and minimum values:
 
@@ -82,16 +96,20 @@ In this plot it is also interesting to see the scattered plots for each combinat
 
 We can also observe the correlation between variables but we can comment on that with the next plot which is more visual.
 
-```{r gather human final}
+```{r overview human final}
+library(ggplot2)
+library(GGally)
 ggpairs(human, mapping=aes(), lower=list(combo=wrap("facethist", bins = 20)))
 ```
 
 In the next plot we can see more visually the correlation between variables. Obviously the education variables are very strongly correlated between them. But it is interesting to see that in general, health and knowledge variables are very strongly related. Especially years of expected education is related positively with life expectancy (0.79) and negatively with maternal mortality (-0.74).
 
 ```{r corrplot human final}
+library(corrplot)
+library(magrittr)
 cor(human)%>%corrplot.mixed(number.cex = .8, tl.col = "black")
-
 ```
+
 Based on these correlation we can draw a plot to see how knowledge and health variables relate. In the first plot we can see how life expectancy increases with expected years of education. In the second plot we can see how maternal mortality decreases with mean years of education.
 
 ```{r boxplot human}
@@ -101,14 +119,156 @@ g1 + geom_point() + xlab("Years of expected education") + ylab("Life expectancy"
 
 g2 <- ggplot(human, aes(x=meanyr.edu, y=matermor))
 g2 + geom_point() + xlab("Mean years of education") + ylab("Maternal mortality")
-par(c(g1, g2), mfrow=c(1,2))
+par(c(g1, g2), mfrow=c(2,2))
 ```
 
+<br>
 
-# 5. Methods
+## 5. Methods
 
 On the previous sections we have seen an overview of the data, the possible relationships between variables and even some detailed graphics as examples. But now we will analyse our data with statistical methods, so we can really have proof to accept or reject our initial hypothesis.
 
-# 6. Results
+Since all our variables are numerical and not discrete, first we will do a multiple linear regression to see which model fits the best.
 
-# 7. Conclusions and discussion
+Linear regression follows the general formula like: 
+$$y = A + Bx$$
+A is the point where the regression line intercepts the Y axis and B is the slope of the regression and it shows the relationship between x and y. We can have various explanatory variables, y ~ x1 + x2 + x3. In this study we will go through various combinations and finally show the one with the highest multiple R-squared with all the explanatory variables being significant. The multiple R squared of the model measure the amount of variation in the target variable that can be explained by the explanatory variables.
+
+Linear regression has 2 basic assumptions:
+ *Residuals (errors of the model) have a constant variance, so that they do not depend on the explanatory variable.
+  *Residuals are normally distributed
+ 
+To prove this assumptions we will perform residuals vs fitted values plot and normal QQ-plot respectively. Fitted values would be the model predictions. Moreover we will look if any of the observations have higher leverage, which means, if they have an unusual high impact.
+
+
+It is important in order to understand better our data, to see if it is homogenously distributed or on the contrary, if it is clustered, so that some observations are closer to each other than some other observations. One of the most typical clustering methos is the k-means clustering algorithm. 
+
+In order to perform k-means, first we need to choose the number of clusters, then k-means will set the cluster centroids and the data points. Then it will assign every data point to a cluster based on the distance from the closest centroid.
+
+For this purpose, first we calculate the distances between the observations. We use the most common, euclidean distance. Then we will investigate what is the optimal number of clusters, but setting the max number of clusters to 10. We will use one of the most used methods for deciding the number of cluster, sum of squares.The sum of squares or total within cluster sum of squares (TWCSS), is the sum of within cluster sum of squares (WCSS). 
+
+So when you plot the number of clusters and the total WCSS, the optimal number of clusters is when the total WCSS drops radically.
+
+Furthermore it is important to scale the dataset before applying k-means, since the variables have very diverse units that could affect to the distances between obervations.
+
+<br>
+
+## 6. Results
+
+
+### 6.1 Linear Regression
+ 
+After trying various combinations, the next 3 models are the ones which contain only significant variables and have highest R squared.
+
+In general, it seems that years of expected education explains better the health variables such as life expectancy, adolescent births and maternal mortality. 
+
+In the first model, we have two explanatory variables, years of expected education and GNI, and the target, life expectancy. 
+
+On the output we see a table where the first column shows the estimation of each of the coefficients or parameters of the model, then the standard error for these estimations. Finally the T-test value and the p-value to accept or reject the nulle hypothesis. So we can conclude that these explanatory variables are the only ones with a p-value close enough to zero that the nulle hypothesis is false and therefore affirm that there is statistical relationship between variables. The multiple R squared for the first model is 0.654, so our model can explain 65.4% of the variability in life expectancy.
+ 
+```{r MLR}
+# First model
+my_model1 <- lm(lifexp ~ yr.eduexp + GNI, data = human)
+summary(my_model1)
+```
+
+On the second model, we have three explanatory variables; years of expected education, population with at least secondary school and GNI. And the target variable is adolescent births. We expressly choose these variables because all of them are significant and therefore we can affirm there is statistical relationship between the explanatory variables and the target. The second model can explain 56.3% of the variability in adolescent births.
+
+```{r MLR2}
+# Second model
+my_model2 <- lm(adobirth ~ yr.eduexp + edu2.mean + GNI, data = human)
+summary(my_model2)
+```
+
+Finally, on the thrird model we only have one significant explanatory variable, years of expected education, and the target is maternal mortality. The model explains 54.2% of the variability of maternal mortality. We also draw a plot to see more clear the relationship between these two variables.
+```{r MLR3}
+# Third model
+my_model3 <- lm(matermor ~ yr.eduexp, data = human)
+summary(my_model3)
+
+qplot(yr.eduexp, matermor, data = human) + geom_smooth(method="lm")
+```
+
+Since the first model was the one with highest R squared we will select this one to proceed with model validation.
+
+On the first, residuals vs fitted values plot, we can observe that the observations are fairly randomly distributed, we do not see a pattern. So that means the first assumption is reasonable.
+
+On the second normal QQ-plot, we can observe how all the observations follow all the way dashed line, so the observations do not sepparate from the red line at any point. Therefore we can say the the second assumption is reasonable as well. 
+
+The third one, we can see how the leverage of the points is similar, there is no single points which have much higher leverage than the others. If we llok at the units, there is less than 0.3 between the highest and lowest. The only observation that may have a bit higher leverage is Qatar but still it is not so far from the rest. Therefore, we have regular leverage and that gives more validity to our model.
+
+With these three plots we have now validated our model.
+
+
+```{r model validation}
+par(mfrow = c(2,2))
+plot(my_model1, which= c(1,2,5))
+
+```
+
+
+### 6.2 K-means
+
+First we scale our dataset and change it to a data frame object again. We can observe how our dataset is scaled because now all the variables have mean of 0.
+
+```{r scale human}
+human_scaled <- scale(human)
+summary(human_scaled)
+
+
+human_scaled <- as.data.frame(human_scaled)
+
+```
+
+
+Then we calculate the euclidean distances.
+
+```{r eu_dist}
+dist_eu <- dist(human_scaled)
+
+summary(dist_eu)
+```
+
+Now we will check what is the optimal amount of clusters. It seems that it is 2 clusters, as explained before, when the total WCSS drops radically.
+
+```{r det.clusters}
+# avoid the kmeans to give us every time different results
+set.seed(123)
+
+# set the maximum number of clusters to 10
+k_max <- 10
+
+# calculate the total sum of squares:
+twcss <- sapply(1:k_max, function(k){kmeans (human_scaled, k)$tot.withinss})
+
+# see graphically the optimal number of clusters:
+qplot(x = 1:k_max, y = twcss, geom = c('point','line'), span=0.2, xlab="Number of clusters K",
+     ylab="Total within-clusters sum of squares")
+```
+
+Finally we can see in the next graphic each of the combinations of the variables, and it is veyr clear in all the combination how there is clearly two clusters in our dataset. For example we can see the cluster of countries which have low maternal mortality also have high education, and cluster of countries with higher maternal mortality also have lower education. We can also see the clusters of people with high life expectancy which have high education, and viceversa. 
+
+These results clearly support our initial hypothesis that health and knowledge are very related. 
+
+```{r km2}
+km <- kmeans(human_scaled, centers = 2)
+
+pairs(human_scaled, col=km$cluster)
+```
+
+<br>
+
+## 7. Conclusions and discussion
+
+The exploration of our variables and the relationships between them suggest that health and knowledge variables are related. 
+
+The results of the different regression models clearly showed how we can make quite strong models to explain the variability on the data. We could prove that there is statistical relationship between life expectancy and years of expected education and GNI. Moreover, this model explained 65.4% of the variability in life expectancy. The other two models were fairly good as well. Therefore we could make quite good predictions with our model, for example predict health values given some education variables.
+
+With the k-means clustering we could prove that our data is not homogenously distributed but clustered in two. 
+
+From our results we can also suggest that GNI is not always the best explanatory variable, for example with maternal mortality as target variable, we got much better models with education variables as explanatory than GNI .
+
+To sum up, we can conlcude that our hypothesis were correct and that effectively, health and knowledge variables are related. That is, life expectancy is positively related to all the education variables, and adolescent births and maternal mortality are negatively related with all the education variables. We can also conclude that our data is clustered in two.
+
+<br>
+<br>
